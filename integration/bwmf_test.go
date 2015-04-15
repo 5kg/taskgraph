@@ -13,7 +13,7 @@ func TestBWMF(t *testing.T) {
 	etcdURLs := []string{"http://localhost:4001"}
 
 	job := "bwmf_basic_test"
-	numOfTasks := uint64(2)
+	numOfTasks := uint64(4)
 
 	ctl := controller.New(job, etcd.NewClient(etcdURLs), numOfTasks, []string{"Neighbors", "Master"})
 	ctl.Start()
@@ -23,12 +23,12 @@ func TestBWMF(t *testing.T) {
 		NumIters:   4,
 		ConfBytes: []byte(`{"OptConf": {"Sigma":0.01,"Alpha":1,"Beta":0.1,"GradTol":1e-06},
 				    "IOConf":  {"IFs":"local",
-						"IDPath":"../example/bwmf/data/row_shard.dat",
-						"ITPath":"../example/bwmf/data/column_shard.dat",
+						"IDPath":"../example/bwmf/data/20ng_row_shard.dat",
+						"ITPath":"../example/bwmf/data/20ng_column_shard.t.dat",
 						"OFs":"local",
 						"ODPath":"../example/bwmf/data/dShard.dat",
 						"OTPath":"../example/bwmf/data/tShard.dat"}}`),
-		LatentDim: 2,
+		LatentDim: 10,
 	}
 	for i := uint64(0); i < numOfTasks; i++ {
 		go drive(t, job, etcdURLs, tb, topo.NewFullTopology(numOfTasks))
