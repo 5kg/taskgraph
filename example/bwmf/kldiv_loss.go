@@ -57,30 +57,30 @@ func (l *KLDivLoss) Evaluate(param op.Parameter, gradient op.Parameter) float32 
 	H := param
 	op.Fill(gradient, 0.0)
 	value := float32(0.0)
+
 	for i := 0; i < l.m; i++ {
-		for j := 0; j < l.n; j++ {
-			v, ve := l.V.GetRow()[j].At[int32(i)]
-			// wh := l.smooth // move away from 0
+		wRow := l.GetWRow(i)
+		for k, wk := range *wRow {
+			for j := 0; j < l.n; j++ {
+				gradient.Add(j*l.k+int(k), wk)
+			}
+		}
+	}
+
+	for j := 0; j < l.n; j++ {
+		vRow := l.V.GetRow()[j].At
+		for i, v := range vRow {
 			wh := float32(0.0)
 
-			wRow := l.GetWRow(i)
+			wRow := l.GetWRow(int(i))
 			for k, wk := range *wRow {
 				wh += wk * H.Get(j*l.k+int(k))
 			}
 
-			// accumulate to grad vec
-			if ve {
-				// v is non-zero
-				value += -v*float32(math.Log(float64(wh+l.smooth))) + wh
-				for k, wk := range *wRow {
-					gradient.Add(j*l.k+int(k), wk*(1.0-(v+l.smooth)/(wh+l.smooth)))
-				}
-			} else {
-				// v is zero
-				value += wh
-				for k, wk := range *wRow {
-					gradient.Add(j*l.k+int(k), wk)
-				}
+			// v is non-zero
+			value += -v*float32(math.Log(float64(wh+l.smooth))) + wh
+			for k, wk := range *wRow {
+				gradient.Add(j*l.k+int(k), -wk*(v+l.smooth)/(wh+l.smooth))
 			}
 		}
 	}
